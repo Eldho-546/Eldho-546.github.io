@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Abitha — Projects</title>
+  <meta name="description" content="Sleek, responsive dark portfolio homepage featuring project panels that link to detailed build blogs." />
+  <meta name="theme-color" content="#0b0f19" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    img{max-width:100%;display:block}
+    a{color:inherit;text-decoration:none}
+    :root{
+      --bg:#0b0f19;--text:#e6e8ef;--muted:#99a1b3;--brand:#8aa1ff;--brand-strong:#6b84ff;--ring:rgba(138,161,255,.35);--radius:18px;--shadow:0 10px 30px rgba(0,0,0,.35);--maxw:1200px;
+    }
+    body{
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:radial-gradient(60vw 60vw at 80% -10%,#0e1430 0%,transparent 60%),radial-gradient(50vw 50vw at -10% 10%,#0b0f19 0%,transparent 60%),var(--bg);
+      color:var(--text); line-height:1.65;
+    }
+    .shell{max-width:var(--maxw);margin:0 auto;padding:clamp(16px,4vw,32px);}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;}
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand h1{margin:0;font-size:22px;}
+    .btn{background:linear-gradient(180deg,var(--brand),var(--brand-strong));color:#fff;padding:10px 16px;border-radius:12px;font-size:15px;box-shadow:var(--shadow);}
+    .grid{display:grid;gap:clamp(16px,3vw,24px);grid-template-columns:1fr;}
+    @media(min-width:720px){.grid{grid-template-columns:repeat(2,1fr);}}
+    .card{position:relative;overflow:hidden;border-radius:var(--radius);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);box-shadow:var(--shadow);transition:transform .3s ease;}
+    .card:hover{transform:translateY(-4px);}
+    .card img{width:100%;height:300px;object-fit:cover;}
+    .card-body{padding:16px;}
+    .card h2{margin:0 0 8px;font-size:18px;}
+    .card p{margin:0;color:var(--muted);font-size:14px;}
+    footer{color:var(--muted);font-size:14px;padding:24px 0 8px;text-align:center;}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <h1>Abitha — Projects</h1>
+      </div>
+      <a href="projects/pen-plotter.html" class="btn">View Project</a>
+    </header>
+
+    <section class="grid">
+      <a href="projects/pen-plotter.html" class="card">
+        <img src="assets/images/whiteboard-hardware.jpg" alt="Whiteboard Pen Plotter thumb" />
+        <div class="card-body">
+          <h2>Autoboard</h2>
+          <p>2-axis plotter using NEMA steppers, TMC drivers and custom G-code pipeline. Build log with problems & solutions.</p>
+        </div>
+      </a>
+      <a href="#" class="card">
+        <img src="assets/images/IMG_0812.jpg" alt="Placeholder project thumbnail" />
+        <div class="card-body">
+          <h2>Twistopher</h2>
+          <p>Placeholder for future project entry.</p>
+        </div>
+      </a>
+    </section>
+
+    <footer>
+      © <span id="year"></span> Abitha • Bristol, UK
+    </footer>
+  </div>
+  <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+</body>
+</html>
