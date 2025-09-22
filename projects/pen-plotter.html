@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Whiteboard Pen Plotter — Project Blog | Abitha</title>
+  <meta name="description" content="Build log for a 2‑axis whiteboard pen plotter: goals, hardware, firmware, mechanics, problems & fixes, results, and next steps." />
+  <meta name="theme-color" content="#0b0f19" />
+  <style>
+    /* Expandable code block */
+    .code-wrap {
+      position: relative;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      background: #0e162b;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .code-wrap pre {
+      max-height: 280px;       /* default height */
+      margin: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+    .code-wrap .fade {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 42px;
+      height: 48px;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(14,22,43,0), rgba(14,22,43,1));
+      display: none; /* only show when not expanded */
+    }
+    .code-wrap .toolbar {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      display: flex;
+      gap: 8px;
+    }
+    .code-wrap .toolbar button {
+      background: rgba(255,255,255,.06);
+      color: #e6e8ef;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      font-size: 12px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .code-wrap:not(.expanded) .fade {
+      display: block;
+    }
+    .code-wrap.expanded pre {
+      max-height: min(70vh, 720px);  /* bigger when expanded */
+    }
+
+    /* --- Base / tokens (matching homepage) --- */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    img{max-width:100%;display:block}
+    a{color:inherit;text-decoration:none}
+    pre,code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+    :root{
+      --bg: #0b0f19;
+      --bg-soft: #0f1526;
+      --text: #e6e8ef;
+      --muted: #99a1b3;
+      --brand: #8aa1ff;
+      --brand-strong: #6b84ff;
+      --card: #10172b;
+      --ring: rgba(138,161,255,.35);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --maxw: 1150px;
+      --content: 760px;
+    }
+
+    body{
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(60vw 60vw at 80% -10%, #0e1430 0%, transparent 60%),
+                  radial-gradient(50vw 50vw at -10% 10%, #0b0f19 0%, transparent 60%),
+                  var(--bg);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .shell{max-width:var(--maxw); margin:0 auto; padding: clamp(16px,2.5vw,28px)}
+
+    /* Header / breadcrumb */
+    header{display:flex; align-items:center; gap:12px; padding-block: 6px 12px}
+    .crumb{ color: var(--muted); font-size:14px; display:flex; gap:8px; align-items:center }
+    .crumb a{ color: var(--brand); }
+    .crumb a:hover{ text-decoration: underline; }
+
+    /* Hero */
+    .hero{ margin-top:8px; background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+           border: 1px solid rgba(255,255,255,.06); border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow);}    
+    .hero-media{ aspect-ratio: 16/7; background:#0a0f1f; position:relative; }
+    .hero-media img,.hero-media video{ width:100%; height:100%; object-fit:cover; }
+    .hero-media video{ position:absolute; inset:0; opacity:0; transition:opacity .4s ease; }
+    .hero-media:hover video{ opacity:1; }
+    .hero-body{ padding: clamp(16px,2.2vw,22px) }
+    .eyebrow{ color: var(--brand); font-weight:650; letter-spacing:.3px; text-transform:uppercase; font-size:12px }
+    h1{ margin:.3rem 0 .4rem; font-size: clamp(24px, 3.2vw, 38px); letter-spacing:.2px }
+    .sub{ color: var(--muted); max-width: 70ch; margin:0 }
+
+    /* Layout: content + aside */
+    .wrap{ display:grid; gap: clamp(16px,2vw,24px); margin-top: clamp(18px,2.5vw,28px) }
+    .content{ max-width: var(--content); }
+    .aside{ background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+            border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding:16px; height:max-content; position:sticky; top:16px }
+
+    @media (min-width: 980px){
+      .wrap{ grid-template-columns: minmax(0, var(--content)) minmax(0, 1fr); align-items:start }
+    }
+
+    /* Article styling */
+    article h2{ font-size: clamp(18px,2.4vw,26px); margin: 26px 0 8px }
+    article p{ margin: 0 0 14px; color: #d7d9e2 }
+    article ul{ margin: 0 0 14px 1.2rem; color:#d7d9e2 }
+    .callout{ background: rgba(138,161,255,.08); border:1px solid rgba(138,161,255,.25); padding:12px 14px; border-radius:12px; }
+
+    /* Media blocks */
+    .figure{ background: #0a0f1f; border:1px solid rgba(255,255,255,.06); border-radius: 14px; overflow:hidden; box-shadow: var(--shadow); margin: 14px 0 }
+    .figure img{ width:100%; height:auto; display:block }
+    /* Smooth rotator + fixed sizing for hardware gallery only */
+    #hardware-rotator{ position:relative; aspect-ratio: 5 / 3; }
+    #hardware-rotator .slide{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .6s ease; }
+    #hardware-rotator .slide.show{ opacity:1; }
+    .figcap{ font-size: 14px; color: var(--muted); padding:10px 12px }
+
+    /* Modelled Parts (model-viewer) */
+    #parts { margin: 50px 0 60px; }
+    #parts .intro { color: var(--muted); max-width: 70ch; }
+    .parts-grid { display:grid; gap:14px; grid-template-columns: 1fr; }
+    .part-card {
+      position: relative;
+    }
+
+    .part-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.12);
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      display: none; /* hidden until focused */
+      z-index: 2;
+    }
+
+    /* When a card is focused */
+    .parts-grid.focused .part-card { display: none; }
+    .parts-grid.focused .part-card.focused {
+      display: block;
+      grid-column: 1 / -1;
+    }
+    .parts-grid.focused .part-card.focused model-viewer {
+      height: min(70vh, 720px); /* taller in focus mode */
+    }
+    .parts-grid.focused .part-card.focused .part-close {
+      display: inline-block;
+    }
+
+    @media (min-width: 720px){ .parts-grid{ grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1040px){ .parts-grid{ grid-template-columns: repeat(3, 1fr); } }
+    .part-card { position:relative; background:#10172b; border:1px solid rgba(255,255,255,.06); border-radius:14px; overflow:hidden; box-shadow:var(--shadow); }
+    .part-card model-viewer { width:100%; height:auto; aspect-ratio: 5 / 3; display:block; background:#0a0f1f; }
+    .part-cap { position:absolute; left:10px; bottom:10px; background:rgba(0,0,0,.45); padding:6px 10px; border-radius:10px; font-size:12px; color:#cbd5ff; border:1px solid rgba(255,255,255,.08); }
+    .part-close { position:absolute; top:10px; right:10px; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.12); color:#e6e8ef; font-size:12px; padding:6px 10px; border-radius:10px; display:none; }
+    .parts-grid.focused .part-card { display:none; }
+    .parts-grid.focused .part-card.focused { display:block; grid-column:1 / -1; }
+    .parts-grid.focused .part-card.focused model-viewer { aspect-ratio:auto; height:min(70vh, 720px); }
+    .parts-grid.focused .part-card.focused .part-close { display:inline-block; }
+
+    /* Code block (lightweight) */
+    pre{ background:#0e162b; border:1px solid rgba(255,255,255,.06); padding:14px; border-radius:12px; overflow:auto }
+    code{ color:#c7d2fe }
+
+    /* Aside content */
+    .aside h3{ margin:0 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing:.4px; color:#cbd5ff }
+    .aside .kv{ display:grid; grid-template-columns: 1fr; gap:8px }
+    .kv div{ display:flex; justify-content:space-between; gap:12px; padding:8px 10px; border-radius:10px; background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06) }
+    .kv span{ color: var(--muted) }
+    .chip{ display:inline-block; padding:6px 10px; border-radius:999px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); margin:4px 6px 0 0; font-size:12px; color:#cbd5ff }
+    .btn{ display:inline-block; margin-top:10px; background: linear-gradient(180deg, var(--brand), var(--brand-strong)); color:white; padding:10px 14px; border-radius:12px; box-shadow: var(--shadow) }
+
+    footer{ color: var(--muted); font-size:14px; padding: 26px 0 8px }
+
+    /* Modes/Features carousel */
+    .modes { margin: 22px 0 10px; }
+    .modes .intro { color: var(--muted); max-width: 70ch; }
+
+    .modes-carousel {
+      margin-top: 10px;
+      background: #0a0f1f;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .modes-head {
+      display: grid;
+      grid-template-columns: 40px 1fr 40px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .modes-head .nav {
+      display: grid; place-items: center;
+      height: 38px; width: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.199);
+      background: rgba(255,255,255,.05);
+      cursor: pointer;
+      user-select: none;
+      color:#495374
+    }
+    .modes-head .title {
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .modes-body {
+      display: grid;
+      gap: 14px;
+    }
+    @media (min-width: 980px){
+      .modes-body { grid-template-columns: 1fr 1fr; align-items: start; }
+    }
+
+    .modes-code {
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      background: #0e162b;
+      overflow: hidden;
+    }
+    .modes-code pre {
+      margin: 0;
+      max-height: 360px;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .modes-desc {
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      background: #0e162b;
+      padding: 14px;
+    }
+    .modes-video {
+      margin-top: 10px;
+      background: #0a0f1f;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    /* Fade transition targets */
+    .fadebox { opacity: 1; transition: opacity .28s ease; }
+    .fadebox.is-changing { opacity: 0; }
+
+    /* Optional: nicer inline code color if you add Prism later */
+    .modes-code code { color: #c7d2fe; }
+
+    /* Bigger overall sizing */
+    .modes .title { font-size: clamp(18px, 2.2vw, 24px); }
+    .modes-carousel { padding: 18px; }
+    @media (min-width: 980px){
+      .modes-body { grid-template-columns: 7fr 5fr; } /* code a bit wider than desc/video */
+    }
+
+    /* Code panel: bigger by default + expandable */
+    .modes-code {
+      position: relative;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      background: #0e162b;
+      overflow: hidden;
+    }
+    .modes-code pre {
+      margin: 0;
+      max-height: 420px;   /* bigger default */
+      overflow: auto;
+      padding: 16px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    /* Transparent scrollbar track */
+    .modes-code pre {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.28) transparent; /* Firefox */
+    }
+    .modes-code pre::-webkit-scrollbar { width: 10px; height: 10px; }
+    .modes-code pre::-webkit-scrollbar-track { background: transparent; }
+    .modes-code pre::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,.18);
+      border-radius: 10px;
+      border: 2px solid transparent;  /* creates visual gap to track */
+      background-clip: content-box;
+    }
+
+    /* Fade helper (already added for your section) */
+    .fadebox { opacity: 1; transition: opacity .28s ease; }
+    .fadebox.is-changing { opacity: 0; }
+
+    /* Code toolbar (Expand/Collapse) */
+    .modes-code .toolbar {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+    .modes-code .toolbar button {
+      background: rgba(255,255,255,.06);
+      color: #e6e8ef;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      font-size: 12px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    /* Expand state */
+    .modes-code.expanded pre {
+      max-height: min(70vh, 720px);  /* tall when expanded */
+    }
+
+    /* Description + video: make the video area bigger */
+    .modes-desc { padding: 16px; }
+    .modes-video { margin-top: 12px; border-radius: 12px; }
+    .modes-video video { width: 100%; height: auto; display: block; }
+
+    /* Transparent scrollbar track for the Firmware code box */
+    article pre {
+      /* Firefox */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.28) transparent;
+    }
+    article pre::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    article pre::-webkit-scrollbar-track {
+      background: transparent;   /* transparent background */
+    }
+    article pre::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,.18);
+      border-radius: 10px;
+      border: 2px solid transparent; /* keeps a gap so track looks transparent */
+      background-clip: content-box;
+    }
+
+    /* Two–image layout for “Why this design?” */
+    .design-pics {
+      display: grid;
+      gap: 14px;
+      margin: 14px 0 20px;
+    }
+    .design-pics img {
+      width: 100%;
+      height: auto;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    @media (min-width: 720px){
+      .design-pics {
+        grid-template-columns: 1fr 1fr;  /* side by side on wider screens */
+      }
+    }
+
+
+    @media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="crumb"><a href="../index.html">← Back to Projects</a> / Whiteboard Pen Plotter</div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-media">
+        <img src="../assets/images/whiteboard-hardware.jpg" alt="Whiteboard pen plotter hero placeholder" loading="lazy" decoding="async" />
+        <video src="../assets/videos/0911(1).mp4" muted loop autoplay playsinline preload="metadata"></video>
+      </div>
+      <div class="hero-body">
+        <div class="eyebrow">Build Log</div>
+        <h1>Whiteboard Pen Plotter</h1>
+        <p class="sub">A compact 2‑axis plotter designed for whiteboard drawings. This post captures goals, architecture, hardware choices, firmware approach, mechanical tuning, the problems I hit, and how I solved them. Images below are placeholders for now.</p>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <!-- Main Article -->
+      <article class="content" id="content">
+        <h2>TL;DR</h2>
+        <p>A wall-mounted CoreXY whiteboard plotter I designed and built from scratch. It uses custom 3D-printed parts, runs on GRBL, and supports multiple modes like free draw, image tracing, voice, and gesture control. I started with manual motor control before building my own G-code sender and refining the system for smooth, modular use. A hands-on project in hardware, software, and creative problem-solving.</p>
+
+        <div class="figure">
+          <img alt="Placeholder: plotter drawing on a whiteboard" loading="lazy" decoding="async" src="../assets/images/IMG_4142.jpg" />
+          <div class="figcap">Figure 1 — Demo still (placeholder). Replace with an action shot of the pen plotting a shape.</div>
+        </div>
+
+        <h2>Goals</h2>
+        <ul>
+          <li><strong>Learn how CoreXY systems work</strong> by building one myself and adapting it to a vertical surface.</li>
+          <li><strong>Keep the project low-cost</strong> by reusing the whiteboard itself as part of the rail system and 3D printing most structural components instead of buying expensive hardware.</li>
+          <li><strong>Add fun and unique features</strong> like voice control, gesture input, and other interactive modes — to get the most out of the hardware and make the project stand out from typical plotters.</li>
+        </ul>
+
+        <h2>Architecture Overview</h2>
+        <p>The whiteboard plotter is built around a CoreXY motion system, chosen for its light moving mass and high-speed accuracy. Motion is driven by two NEMA-17 stepper motors through GT2 belts and pulleys, with a compact micro-servo to lift and lower the pen. An Arduino Uno fitted with a CNC Shield and TMC stepper drivers provides the control electronics. On the firmware side, I run a custom GRBL streaming setup: instead of sending pre-generated files only, a lightweight host script streams G-code commands in real time, allowing both traditional plotted drawings and interactive modes. Together these mechanical, electronic, and software components form a precise, easily serviceable platform for large-scale whiteboard sketches.</p>
+        <div class="figure">
+          <img alt="Placeholder architecture diagram" loading="lazy" decoding="async" src="../assets/images/corexy.png" />
+          <div class="figcap">Figure 2 — System blocks (placeholder).</div>
+        </div>
+
+        <h2>Hardware</h2>
+        <p>Short filler: 2 stepper motors, 1 servo, Arduino Uno, CNC shield, TMC drivers, plus a belt and pulleys.</p>
+        <div class="figure" id="hardware-rotator">
+          <img class="slide slideA show" alt="Hardware gallery image A" loading="lazy" decoding="async" src="https://picsum.photos/1200/720?random=1" />
+          <img class="slide slideB" alt="Hardware gallery image B" loading="lazy" decoding="async" src="https://picsum.photos/1200/720?random=2" />
+          <div class="figcap">Hardware gallery — cycling placeholders (5) with smooth fade.</div>
+        </div>
+
+        <!-- Modelled Parts (GLB with model-viewer) -->
+        <section class="section" id="parts">
+          <h2>Modelled Parts</h2>
+          <p class="intro">I designed and printed brackets, idlers, mounts and hooks to route the belt, hold the pen and attach the plotter to the frame. Click a model to focus it; drag to rotate, pinch/scroll to zoom.</p>
+          <div class="parts-grid" id="partsGrid">
+            <div class="part-card" data-name="Pen Mount">
+              <button class="part-close" type="button">Back</button>
+              <span class="part-cap">Pen Mount</span>
+              <model-viewer src="../assets/models/central_pulley.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
+            </div>
+            <div class="part-card" data-name="Belt Idler">
+              <button class="part-close" type="button">Back</button>
+              <span class="part-cap">Belt Idler</span>
+              <model-viewer src="../assets/models/motor_mount.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
+            </div>
+            <div class="part-card" data-name="Motor Mount">
+              <button class="part-close" type="button">Back</button>
+              <span class="part-cap">Motor Mount</span>
+              <model-viewer src="../assets/models/radial_pulley.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
+            </div>
+            <div class="part-card" data-name="Wall Hook">
+              <button class="part-close" type="button">Back</button>
+              <span class="part-cap">Wall Hook</span>
+              <model-viewer src="../assets/models/servo holder v6.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
+            </div>
+            <div class="part-card" data-name="Cable Clip">
+              <button class="part-close" type="button">Back</button>
+              <span class="part-cap">Cable Clip</span>
+              <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
+            </div>
+          </div>
+          <h3>Why this design?</h3>
+            <p class="intro">
+              The custom brackets and mounts were shaped to balance rigidity and ease of printing.
+              I optimised the geometry for quick 3D-printing, low weight and minimal post-processing,
+              while keeping the belt path and pen carriage perfectly square to the CoreXY mechanics.
+            </p>
+
+            <div class="design-pics">
+              <img src="https://picsum.photos/600/400?random=21" alt="Design illustration 1" loading="lazy" decoding="async" />
+              <img src="https://picsum.photos/600/400?random=22" alt="Design illustration 2" loading="lazy" decoding="async" />
+            </div>
+
+        </section>
+
+        <h2>Firmware</h2>
+        <p>Filler text: The firmware runs a small planner with trapezoidal acceleration and a queue of moves extracted from G‑code. Pen up/down timing uses a simple dwell and a solenoid/servo pin. This section will include real snippets and configuration tables.</p>
+        <div class="code-wrap" id="fw-code">
+          <pre><code class="language-cpp">
+            def __init__(self, ui_log_callback):
+                self.ser = None
+                self.lock = threading.Lock()
+                self.ui_log = ui_log_callback
+                self.reader_thread = None
+                self.reader_running = False
+
+            def list_ports(self):
+                if not serial:
+                    return []
+                return [p.device for p in serial.tools.list_ports.comports()]
+
+            def connect(self, port: str, baud: int = 115200):
+                if not serial:
+                    self.ui_log("pyserial not installed.\n")
+                    return False
+                try:
+                    self.ser = serial.Serial(port, baudrate=baud, timeout=0.2)
+                    time.sleep(2.0)
+                    self.ui_log(f"Connected to {port}@{baud}\n")
+                    self._start_reader()
+                    return True
+                except Exception as e:
+                    self.ui_log(f"Connect error: {e}\n")
+                    self.ser = None
+                    return False
+
+            def disconnect(self):
+                self.pause_reader()
+                with self.lock:
+                    if self.ser:
+                        try:
+                            self.ser.close()
+                        except Exception:
+                            pass
+                        self.ser = None
+                self.ui_log("Disconnected.\n")
+
+            def is_connected(self):
+                return self.ser is not None
+
+            def send_line(self, line: str):
+                with self.lock:
+                    if not self.ser:
+                        return
+                    try:
+                        self.ser.write((line.strip() + "\n").encode("ascii", errors="ignore"))
+                    except Exception as e:
+                        self.ui_log(f"Write error: {e}\n")
+          </code></pre>
+          <div class="fade"></div>
+          <div class="toolbar">
+            <button type="button" data-action="toggle">Expand</button>
+          </div>
+        </div>
+        <!-- Modes / Features -->
+          <section class="modes" id="modes">
+            <h2>Modes</h2>
+            <p class="intro">Different operating modes I implemented in firmware. Use the arrows to browse; the code types in, the description updates, and a short video demo appears.</p>
+
+            <div class="modes-carousel" aria-live="polite">
+              <div class="modes-head">
+                <button class="nav" id="modePrev" aria-label="Previous mode">⟨</button>
+                <div class="title" id="modeTitle">Mode Title</div>
+                <button class="nav" id="modeNext" aria-label="Next mode">⟩</button>
+              </div>
+
+              <div class="modes-body">
+                <!-- Left: Code -->
+                <div class="modes-code fadebox" id="modesCodeBox">
+                  <pre><code id="modeCode">// code will type here</code></pre>
+                  <div class="toolbar">
+                    <button type="button" id="modeExpandBtn">Expand</button>
+                  </div>
+                </div>
+
+                <!-- Right: Description only -->
+                <div class="modes-desc fadebox" id="modeDesc">
+                  <p>Description will update here.</p>
+                </div>
+              </div>
+
+              <!-- Video now spans full width below both columns -->
+              <div class="modes-video fadebox" id="modeVideoBox">
+                <video id="modeVideo" controls preload="metadata" width="100%" height="auto"
+                      poster="https://picsum.photos/800/450">
+                  <source id="modeVideoSrc" src="" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+          </section>
+
+
+        <h2>Mechanics & Tuning</h2>
+        <p>Filler text: I tuned belt tension by printing a quick gauge and checked orthogonality with a square test pattern. Backlash compensation wasn’t necessary after reinforcing the pen mount. I’ll add real measurements and failure photos here.</p>
+
+        <div class="figure">
+          <img alt="Placeholder: close-up of carriage" loading="lazy" decoding="async" src="https://picsum.photos/1200/720?2" />
+          <div class="figcap">Figure 3 — Carriage detail (placeholder).</div>
+        </div>
+
+        <h2>Problems & Solutions</h2>
+        <ul>
+          <li><strong>Missed steps on fast diagonals:</strong> reduced jerk, increased current within thermal limits, and lengthened accel ramp.</li>
+          <li><strong>Wobbly pen lines:</strong> stiffened mount and added a felt damper; swapped to a finer tip marker.</li>
+          <li><strong>Cable drag:</strong> re‑routed through a lightweight loop with slack management.</li>
+        </ul>
+
+        <div class="callout"><strong>Note:</strong> I’ll replace these with real issues from testing once you confirm the page layout.</div>
+
+        <h2>Results</h2>
+        <p>Filler text: The plotter can draw legible 15mm‑tall text and smooth curves across a 600×400mm area. Typical jobs complete without overheating. I’ll add timing numbers and a short embedded clip later.</p>
+
+        <h2>Next Steps</h2>
+        <ul>
+          <li>Speed/accel envelope exploration and jerk‑limited motion.</li>
+          <li>Vector text with custom fonts and kerning controls.</li>
+          <li>Cable tidy and a magnetic pen quick‑release.</li>
+        </ul>
+      </article>
+
+      <!-- Sidebar / meta -->
+      <aside class="aside" aria-label="Project metadata">
+        <h3>Project</h3>
+        <div class="kv">
+          <div><span>Status</span><strong>In progress</strong></div>
+          <div><span>Started</span><strong>2025‑08</strong></div>
+          <div><span>Area</span><strong>Mechatronics</strong></div>
+        </div>
+        <h3 style="margin-top:14px">Tech</h3>
+        <div>
+          <span class="chip">NEMA steppers</span>
+          <span class="chip">TMC drivers</span>
+          <span class="chip">Arduino/Pico</span>
+          <span class="chip">G‑code</span>
+        </div>
+        <h3 style="margin-top:14px">Links</h3>
+        <a class="btn" href="#" onclick="alert('Add GitHub link later')">GitHub (soon)</a>
+      </aside>
+    </div>
+
+    <footer>© <span id="year"></span> Abitha • Bristol, UK</footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Focus / Back for Modelled Parts
+    (function(){
+      const grid = document.getElementById('partsGrid');
+      if (!grid) return;
+
+      grid.addEventListener('click', (e) => {
+        const back = e.target.closest('.part-close');
+        if (back) {
+          grid.classList.remove('focused');
+          grid.querySelectorAll('.part-card').forEach(c => c.classList.remove('focused'));
+          return;
+        }
+        const card = e.target.closest('.part-card');
+        if (card) {
+          grid.classList.add('focused');
+          grid.querySelectorAll('.part-card').forEach(c => c.classList.remove('focused'));
+          card.classList.add('focused');
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          grid.classList.remove('focused');
+          grid.querySelectorAll('.part-card').forEach(c => c.classList.remove('focused'));
+        }
+      });
+    })();
+
+
+    // Hardware image rotator (5 placeholders) — crossfade
+    (function(){
+      const A = document.querySelector('#hardware-rotator .slideA');
+      const B = document.querySelector('#hardware-rotator .slideB');
+      if(!A || !B) return;
+      const imgs = [
+        "../assets/images/servo.jpg",
+        "../assets/images/pulleys_cable.jpg",
+        "../assets/images/motor.jpg",
+        "../assets/images/IMG_0800.jpg",
+        "../assets/images/electronics.jpg"
+      ];
+      // Preload all to avoid flicker
+      imgs.forEach(src => { const im = new Image(); im.src = src; });
+      let i = 1; // A has 0, B has 1 initially
+      let showA = true;
+      setInterval(()=>{
+        i = (i+1) % imgs.length; // next image index
+        const next = imgs[i];
+        const incoming = showA ? B : A;
+        const outgoing = showA ? A : B;
+        incoming.src = next;
+        // Force next frame before toggling for smoother CSS transition
+        requestAnimationFrame(()=>{
+          incoming.classList.add('show');
+          outgoing.classList.remove('show');
+          showA = !showA;
+        });
+      }, 2500);
+      // Ensure images always fill the frame
+      // (Handled by CSS: object-fit: cover; height: 100%)
+    })();
+  </script>
+
+  <script>
+    (function(){
+      const wrap = document.getElementById('fw-code');
+      if(!wrap) return;
+      const btn = wrap.querySelector('[data-action="toggle"]');
+
+      const setLabel = () => { btn.textContent = wrap.classList.contains('expanded') ? 'Collapse' : 'Expand'; };
+      setLabel();
+
+      btn.addEventListener('click', () => {
+        wrap.classList.toggle('expanded');
+        setLabel();
+      });
+
+      // Optional: Esc to collapse
+      document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape' && wrap.classList.contains('expanded')){
+          wrap.classList.remove('expanded');
+          setLabel();
+        }
+      });
+    })();
+  </script>
+
+
+  <script>
+    document.querySelectorAll('model-viewer').forEach((mv) => {
+      mv.addEventListener('load', () => {
+        console.log('✅ loaded', mv.getAttribute('src'));
+      });
+      mv.addEventListener('error', (e) => {
+        console.error('❌ model-viewer error for', mv.getAttribute('src'), e.detail?.message || e);
+      });
+    });
+  </script>
+
+
+  <script type="module">
+    import * as MeshoptDecoder from "https://unpkg.com/@meshoptimizer/meshopt_decoder/meshopt_decoder.module.js";
+    // expose for <model-viewer>
+    window.MeshoptDecoder = MeshoptDecoder;
+  </script>
+
+  
+  <!-- model-viewer web component -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <script>
+    // Focus / Back behavior for Modelled Parts
+    (function(){
+      const grid = document.getElementById('partsGrid');
+      if(!grid) return;
+      grid.addEventListener('click', (e)=>{
+        const back = e.target.closest('.part-close');
+        if(back){ grid.classList.remove('focused'); grid.querySelectorAll('.part-card').forEach(c=>c.classList.remove('focused')); return; }
+        const card = e.target.closest('.part-card');
+        if(card){ grid.classList.add('focused'); grid.querySelectorAll('.part-card').forEach(c=>c.classList.remove('focused')); card.classList.add('focused'); }
+      });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ grid.classList.remove('focused'); grid.querySelectorAll('.part-card').forEach(c=>c.classList.remove('focused')); } });
+    })();
+  </script>
+  <script src="https://unpkg.com/prismjs@1.29.0/components/prism-core.min.js"></script>
+  <script src="https://unpkg.com/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script>
+    // Optional: preload a few common languages
+    Prism.plugins.autoloader.languages_path = 'https://unpkg.com/prismjs@1.29.0/components/';
+  </script>
+  <script>
+    // --- Modes/Features carousel data ---
+      const MODES = [
+        {
+          name: "Vector Plot (G-code)",
+          lang: "cpp",
+          code: `// Streams G-code from host -> GRBL
+    void loop() {
+      if (Serial.available()) {
+        char c = Serial.read();
+        grbl_process(c); // pass to GRBL parser
+      }
+    }`,
+          desc: "Standard G-code streaming: paths are generated offline (Inkscape/VPython/etc.) and sent over serial to GRBL. Good for precise drawings.",
+          video: "../assets/videos/0911(1).mp4" // <- replace with your file or keep blank
+        },
+        {
+          name: "Live Sketch",
+          lang: "cpp",
+          code: `// Joystick -> pen plot (live control)
+    void loop() {
+      int dx = analogRead(A0) - 512;
+      int dy = analogRead(A1) - 512;
+      planner_line(dx, dy, feedRateLive);
+    }`,
+          desc: "Real-time control via joystick/wacom/keyboard. Great for testing mechanics and for playful demos.",
+          video: "assets/videos/mode-live.mp4"
+        },
+        {
+          name: "Raster Dither",
+          lang: "cpp",
+          code: `// Image -> dither -> scanlines
+    for (int y=0; y<H; y++) {
+      for (int x=0; x<W; x++) {
+        bool dot = dither(img[x][y]);
+        pen(dot ? DOWN : UP);
+        stepX();
+      }
+      serpentine ? reverseX() : homeX();
+      stepY();
+    }`,
+          desc: "Converts images to a dithered pattern and scans in serpentine lines. Produces shaded ‘print-like’ whiteboard art.",
+          video: "assets/videos/mode-raster.mp4"
+        }
+      ];
+
+      // --- Helpers ---
+      const el = (id) => document.getElementById(id);
+      const titleEl   = el('modeTitle');
+      const codeEl    = el('modeCode');
+      const descBox   = el('modeDesc');
+      const videoBox  = el('modeVideoBox');
+      const videoEl   = el('modeVideo');
+      const videoSrc  = el('modeVideoSrc');
+      const codeBox   = document.querySelector('.modes-code');
+
+      let idx = 0;
+      let typerTimer;
+
+      function setChanging(on) {
+        // add/remove fade class to all three boxes
+        codeBox.classList.toggle('is-changing', on);
+        descBox.classList.toggle('is-changing', on);
+        videoBox.classList.toggle('is-changing', on);
+      }
+
+      function typeCode(text, langHint) {
+        // simple typewriter; clears then types
+        clearInterval(typerTimer);
+        codeEl.textContent = '';           // reset
+        let i = 0;
+        const speed = 12;                  // chars per tick
+        typerTimer = setInterval(() => {
+          codeEl.textContent = text.slice(0, i += speed);
+          if (i >= text.length) clearInterval(typerTimer);
+          // If you later add Prism, you can re-highlight here:
+          // if (window.Prism) Prism.highlightElement(codeEl);
+        }, 20);
+      }
+
+      function renderMode(i) {
+        const m = MODES[i];
+        setChanging(true);
+
+        // Delay to let fade-out happen
+        setTimeout(() => {
+          titleEl.textContent = m.name;
+
+          // Code
+          codeEl.className = '';                 // reset classes
+          codeEl.classList.add(`language-${m.lang || 'cpp'}`);
+          typeCode(m.code, m.lang);
+
+          // Description
+          descBox.innerHTML = `<p>${m.desc}</p>`;
+
+          // Video
+          if (m.video) {
+            videoSrc.src = m.video;
+            videoEl.load();
+          } else {
+            videoSrc.src = '';
+            videoEl.removeAttribute('src');
+            videoEl.load();
+          }
+
+          // Fade back in
+          setChanging(false);
+        }, 160);
+      }
+
+      // Init UI
+      renderMode(idx);
+
+      // Nav
+      document.getElementById('modePrev').addEventListener('click', () => {
+        idx = (idx - 1 + MODES.length) % MODES.length;
+        renderMode(idx);
+      });
+      document.getElementById('modeNext').addEventListener('click', () => {
+        idx = (idx + 1) % MODES.length;
+        renderMode(idx);
+      });
+      // Optional keyboard arrows
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft')  document.getElementById('modePrev').click();
+        if (e.key === 'ArrowRight') document.getElementById('modeNext').click();
+      });
+    </script>
+    <script>
+      // Expand/Collapse for the Modes code panel
+      (function(){
+        const box = document.getElementById('modesCodeBox');
+        const btn = document.getElementById('modeExpandBtn');
+        if(!box || !btn) return;
+
+        function setLabel(){
+          btn.textContent = box.classList.contains('expanded') ? 'Collapse' : 'Expand';
+        }
+        setLabel();
+
+        btn.addEventListener('click', ()=>{
+          box.classList.toggle('expanded');
+          setLabel();
+        });
+
+        // Optional: collapse with Esc
+        document.addEventListener('keydown', (e)=>{
+          if(e.key === 'Escape' && box.classList.contains('expanded')){
+            box.classList.remove('expanded');
+            setLabel();
+          }
+        });
+      })();
+    </script>
+
+
+</body>
+</html>
