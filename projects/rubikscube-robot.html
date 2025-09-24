@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rubik’s Cube Solving Robot — Project Blog | Eldho</title>
+  <meta name="description" content="A compact page for my single‑motor, servo‑assisted Rubik’s Cube solver: This project is still in the works, the folowowing videos are from my first prototype, which had an issue with faces miscaligning and the motor not providing enough torque. I am currently working on the second version which will use a larger Nema 23 motor as well as a revised gear system" />
+  <meta name="theme-color" content="#0b0f19" />
+  <style>
+    /* --- Base / tokens (copied to match site look) --- */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    img{max-width:100%;display:block}
+    a{color:inherit;text-decoration:none}
+    :root{
+      --bg:#0b0f19; --bg-soft:#0f1526; --text:#e6e8ef; --muted:#99a1b3;
+      --brand:#8aa1ff; --brand-strong:#6b84ff; --card:#10172b; --ring:rgba(138,161,255,.35);
+      --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px; --maxw:1150px; --content:760px;
+    }
+    body{
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(60vw 60vw at 80% -10%, #0e1430 0%, transparent 60%),
+                  radial-gradient(50vw 50vw at -10% 10%, #0b0f19 0%, transparent 60%),
+                  var(--bg);
+      line-height:1.7; -webkit-font-smoothing:antialiased;
+    }
+    .shell{max-width:var(--maxw); margin:0 auto; padding: clamp(16px,2.5vw,28px)}
+
+    /* Header / breadcrumb */
+    header{display:flex; align-items:center; gap:12px; padding-block: 6px 12px}
+    .crumb{ color: var(--muted); font-size:14px; display:flex; gap:8px; align-items:center }
+    .crumb a{ color: var(--brand); }
+    .crumb a:hover{ text-decoration: underline; }
+
+    /* Hero (simple) */
+    .hero{ margin-top:8px; background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+           border: 1px solid rgba(255,255,255,.06); border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow);}    
+    .hero-body{ padding: clamp(16px,2.2vw,22px) }
+    .eyebrow{ color: var(--brand); font-weight:650; letter-spacing:.3px; text-transform:uppercase; font-size:12px }
+    h1{ margin:.3rem 0 .4rem; font-size: clamp(24px, 3.2vw, 38px); letter-spacing:.2px }
+    .sub{ color: var(--muted); max-width: 70ch; margin:0 }
+
+    /* Layout: content + aside */
+    .wrap{ display:grid; gap: clamp(16px,2vw,24px); margin-top: clamp(18px,2.5vw,28px) }
+    .content{ max-width: var(--content); }
+    .aside{ background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+            border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding:16px; height:max-content; position:sticky; top:16px }
+    @media (min-width: 980px){ .wrap{ grid-template-columns: minmax(0, var(--content)) minmax(0, 1fr); align-items:start } }
+
+    /* Article */
+    article h2{ font-size: clamp(18px,2.2vw,24px); margin: 22px 0 10px }
+    article p{ margin: 0 0 14px; color: #d7d9e2 }
+
+    /* Video blocks (stacked) */
+    .video-block{ background:#0a0f1f; border:1px solid rgba(255,255,255,.08); border-radius:14px; box-shadow:var(--shadow); overflow:hidden; margin:14px 0 }
+    /* Let the video define its own aspect ratio (no forced 16:9) */
+    .video-frame{ width:100%; background:#0a0f1f; }          /* remove aspect-ratio + absolute layout */
+    .video-frame video{
+    position: static;                                       /* no absolute positioning */
+    display: block;
+    width: 100%;
+    height: auto;                                           /* use intrinsic aspect ratio */
+    object-fit: contain;                                    /* no cropping; adds pillarbox/letterbox if needed */
+    background: #000;                                       /* nice neutral bars if aspect differs */
+    }
+
+    /* Make sure nothing forces horizontal scroll on mobile */
+    @media (max-width: 640px){ html, body { overflow-x: hidden; } }
+
+    footer{ color: var(--muted); font-size:14px; padding: 26px 0 8px }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="crumb"><a href="../index.html">← Back to Projects</a> / Rubik’s Cube Solver</div>
+    </header>
+
+    <!-- Hero (title + short paragraph) -->
+    <section class="hero">
+      <div class="hero-body">
+        <div class="eyebrow">Project</div>
+        <h1>Rubik’s Cube Solving Robot(first Prototype)</h1>
+        <p class="sub">A compact page for my single‑motor, servo‑assisted Rubik’s Cube solver: This project is still in the works, the folowowing videos are from my first prototype, which had an issue with faces miscaligning and the motor not providing enough torque. I am currently working on the second version which will use a larger Nema 23 motor as well as a revised gear system"</p>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <!-- Main Article -->
+      <article class="content" id="content">
+        <h2>Demo Videos</h2>
+
+        <!-- Video 1 (placeholder) -->
+        <div class="video-block">
+          <div class="video-frame">
+            <video controls preload="metadata">
+              <source src="../assets/videos/0924 (5)/0924 (5).mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
+        <!-- Video 2 (placeholder) -->
+        <div class="video-block">
+          <div class="video-frame">
+            <video controls preload="metadata">
+              <source src="../assets/videos/0924 (4).mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
+      </article>
+
+      <!-- Sidebar / meta -->
+      <aside class="aside" aria-label="Project metadata">
+        <h3>Project</h3>
+        <div class="kv" style="display:grid;grid-template-columns:1fr;gap:8px;">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><span style="color:var(--muted)">Status</span><strong>In progress</strong></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><span style="color:var(--muted)">Started</span><strong>2025‑08</strong></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><span style="color:var(--muted)">Area</span><strong>Mechatronics</strong></div>
+        </div>
+        <h3 style="margin-top:14px">Tech</h3>
+        <div>
+          <span class="chip" style="display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin:4px 6px 0 0;font-size:12px;color:#cbd5ff">NEMA steppers</span>
+          <span class="chip" style="display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin:4px 6px 0 0;font-size:12px;color:#cbd5ff">Servos</span>
+          <span class="chip" style="display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin:4px 6px 0 0;font-size:12px;color:#cbd5ff">Arduino/Pico</span>
+          <span class="chip" style="display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin:4px 6px 0 0;font-size:12px;color:#cbd5ff">Fusion 360</span>
+        </div>
+        <h3 style="margin-top:14px">Links</h3>
+        <a class="btn" href="#" onclick="alert('Add GitHub link later')" style="display:inline-block;margin-top:10px;background:linear-gradient(180deg,var(--brand),var(--brand-strong));color:white;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow)">GitHub (soon)</a>
+      </aside>
+    </div>
+
+    <footer>© <span id="year"></span> Eldho Biju • Bristol, UK</footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

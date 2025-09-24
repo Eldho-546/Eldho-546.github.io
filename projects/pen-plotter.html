@@ -383,6 +383,80 @@
 
 
     @media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important} }
+
+    /* --- FIX: mobile hero image/video width issue --- */
+
+    /* Safety net: prevent any horizontal overflow */
+    @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
+    }
+
+    .hero-media { width: 100%; }
+
+    /* Mobile: make hero media full-width and stop overlay layout issues */
+    @media (max-width: 640px) {
+      .hero-media {
+        aspect-ratio: auto;      /* let height be driven by content */
+      }
+      .hero-media img,
+      .hero-media video {
+        position: static;        /* stop absolute positioning on mobile */
+        display: block;
+        width: 100%;
+        height: auto;            /* keep correct proportions */
+        object-fit: cover;
+      }
+      .hero-media video {
+        display: none;           /* no hover on touch; show the image only */
+      }
+    }
+
+    /* Desktop/laptops: keep the hover fade effect */
+    @media (hover: hover) and (pointer: fine) {
+      .hero-media { aspect-ratio: 16/7; position: relative; }
+      .hero-media img,
+      .hero-media video { width: 100%; height: 100%; object-fit: cover; }
+      .hero-media video { position: absolute; inset: 0; opacity: 0; transition: opacity .4s ease; }
+      .hero-media:hover video { opacity: 1; }
+    }
+    /* --- END FIX --- */
+
+
+      /* --- Photo Collage --- */
+    .collage-section h2 { margin: 26px 0 10px; }
+
+    .collage {
+      column-gap: 12px;            /* spacing between columns */
+      column-fill: balance;
+      column-count: 1;             /* mobile */
+    }
+
+    @media (min-width: 600px)  { .collage { column-count: 2; } }
+    @media (min-width: 900px)  { .collage { column-count: 3; } }
+    @media (min-width: 1200px) { .collage { column-count: 4; } }
+
+    .collage img {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin: 0 0 12px;            /* vertical spacing between items */
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: var(--shadow);
+      break-inside: avoid;         /* keep an image intact within a column */
+      transform-origin: center;
+      transition: transform .18s ease;
+    }
+
+    /* Subtle, randomized “not a perfect grid” vibes */
+    .collage img.tiltL { transform: rotate(-0.6deg); }
+    .collage img.tiltR { transform: rotate(0.6deg); }
+
+    /* Straighten a touch on hover/focus (nice micro-interaction) */
+    @media (hover:hover) and (pointer:fine) {
+      .collage img:hover, .collage img:focus { transform: rotate(0deg) scale(1.01); }
+    }
+
   </style>
 </head>
 <body>
@@ -442,42 +516,40 @@
           <h2>Modelled Parts</h2>
           <p class="intro">I designed and printed brackets, idlers, mounts and hooks to route the belt, hold the pen and attach the plotter to the frame. Click a model to focus it; drag to rotate, pinch/scroll to zoom.</p>
           <div class="parts-grid" id="partsGrid">
-            <div class="part-card" data-name="Pen Mount">
+            <div class="part-card" data-name="central pulley mount">
               <button class="part-close" type="button">Back</button>
               <span class="part-cap">Pen Mount</span>
               <model-viewer src="../assets/models/central_pulley.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
             </div>
-            <div class="part-card" data-name="Belt Idler">
+            <div class="part-card" data-name="motor mount">
               <button class="part-close" type="button">Back</button>
               <span class="part-cap">Belt Idler</span>
               <model-viewer src="../assets/models/motor_mount.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
             </div>
-            <div class="part-card" data-name="Motor Mount">
+            <div class="part-card" data-name="radial pulley mount">
               <button class="part-close" type="button">Back</button>
               <span class="part-cap">Motor Mount</span>
               <model-viewer src="../assets/models/radial_pulley.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
             </div>
-            <div class="part-card" data-name="Wall Hook">
+            <div class="part-card" data-name="pen holder">
               <button class="part-close" type="button">Back</button>
               <span class="part-cap">Wall Hook</span>
               <model-viewer src="../assets/models/servo holder v6.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
             </div>
-            <div class="part-card" data-name="Cable Clip">
+            <div class="part-card" data-name="full whiteboard">
               <button class="part-close" type="button">Back</button>
               <span class="part-cap">Cable Clip</span>
-              <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
+              <model-viewer src="../assets/models/whiteboard v8.glb" camera-controls ar disable-zoom="false" autoplay></model-viewer>
             </div>
           </div>
           <h3>Why this design?</h3>
             <p class="intro">
-              The custom brackets and mounts were shaped to balance rigidity and ease of printing.
-              I optimised the geometry for quick 3D-printing, low weight and minimal post-processing,
-              while keeping the belt path and pen carriage perfectly square to the CoreXY mechanics.
+                The parts were deliberately designed to make use of the whiteboard’s own structure—such as the wall-mounting hooks—as rails. This approach cut cost and weight and kept the overall design compact. It did require accepting a slight loss of smoothness in the plotter’s motion, but that trade-off was worthwhile because the goal was never a high-precision machine. Every piece was shaped to fit seamlessly onto the whiteboard’s edges. 
             </p>
 
             <div class="design-pics">
-              <img src="https://picsum.photos/600/400?random=21" alt="Design illustration 1" loading="lazy" decoding="async" />
-              <img src="https://picsum.photos/600/400?random=22" alt="Design illustration 2" loading="lazy" decoding="async" />
+              <img src="../assets/images/1.jpg" alt="Design illustration 1" loading="lazy" decoding="async" />
+              <img src="../assets/images/2.jpg" alt="Design illustration 2" loading="lazy" decoding="async" />
             </div>
 
         </section>
@@ -486,55 +558,300 @@
         <p>Filler text: The firmware runs a small planner with trapezoidal acceleration and a queue of moves extracted from G‑code. Pen up/down timing uses a simple dwell and a solenoid/servo pin. This section will include real snippets and configuration tables.</p>
         <div class="code-wrap" id="fw-code">
           <pre><code class="language-cpp">
-            def __init__(self, ui_log_callback):
-                self.ser = None
-                self.lock = threading.Lock()
-                self.ui_log = ui_log_callback
-                self.reader_thread = None
-                self.reader_running = False
+#!/usr/bin/env python3
 
-            def list_ports(self):
-                if not serial:
-                    return []
-                return [p.device for p in serial.tools.list_ports.comports()]
+"""
+Pen Plotter Script for GRBL with Mode Selection
+  • Image plotting
+  • Freehand drawing
+  • Text-to-image line sketch plotting
+"""
 
-            def connect(self, port: str, baud: int = 115200):
-                if not serial:
-                    self.ui_log("pyserial not installed.\n")
-                    return False
-                try:
-                    self.ser = serial.Serial(port, baudrate=baud, timeout=0.2)
-                    time.sleep(2.0)
-                    self.ui_log(f"Connected to {port}@{baud}\n")
-                    self._start_reader()
-                    return True
-                except Exception as e:
-                    self.ui_log(f"Connect error: {e}\n")
-                    self.ser = None
-                    return False
+import cv2
+import numpy as np
+from skimage.morphology import skeletonize
+import matplotlib.pyplot as plt
+import serial
+import time
+import math
+from turtle import Screen, Turtle
+import openai
+import requests
+from io import BytesIO
+from PIL import Image
 
-            def disconnect(self):
-                self.pause_reader()
-                with self.lock:
-                    if self.ser:
-                        try:
-                            self.ser.close()
-                        except Exception:
-                            pass
-                        self.ser = None
-                self.ui_log("Disconnected.\n")
+# === Configuration ===
+IMAGE_PATH               = r"C:\Users\Eldho\Downloads\ChatGPT Image Sep 3, 2025, 02_37_06 PM.png"
+OUTPUT_FILE              = r"C:\Users\Eldho\Documents\whiteboard code\mickey.gcode.txt"
+SERIAL_PORT              = "COM3"       # e.g. 'COM3' or '/dev/ttyUSB0'; None to skip streaming
+BAUDRATE                 = 115200       # GRBL default
+OPENAI_API_KEY           = "YOUR_OPENAI_API_KEY"
 
-            def is_connected(self):
-                return self.ser is not None
+# Image mode settings
+SCALE                    = 0.05
+THRESHOLD_VALUE          = 167
+APPROX_FACTOR            = 0.0001
+SHORT_PATH_THRESHOLD     = 5
+MIN_MOVE                 = 0.5
+SKIP_POINTS              = 1
 
-            def send_line(self, line: str):
-                with self.lock:
-                    if not self.ser:
-                        return
-                    try:
-                        self.ser.write((line.strip() + "\n").encode("ascii", errors="ignore"))
-                    except Exception as e:
-                        self.ui_log(f"Write error: {e}\n")
+# Motion settings
+DRAW_FEED                = 6000
+TRAVEL_FEED              = 6000
+PEN_UP_CMD               = "M3 S80"
+PEN_DOWN_CMD             = "M3 S180"
+
+# Units
+UNITS                    = "mm"
+ABSOLUTE                 = True
+
+# Preview
+PREVIEW                  = True
+
+# Draw mode settings
+DRAW_AREA_WIDTH_MM       = 530
+DRAW_AREA_HEIGHT_MM      = 350
+SCREEN_WIDTH_PX          = 1325
+SCREEN_HEIGHT_PX         = 875
+SMOOTH_SEGMENT_MM        = 1.0
+
+# === Core Setup ===
+openai.api_key = "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"
+
+# === Vectorization ===
+def image_to_vector_coordinates(path):
+    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        raise FileNotFoundError(f"Cannot load image: {path}")
+    h_px, w_px = img.shape
+    _, bw = cv2.threshold(img, THRESHOLD_VALUE, 255, cv2.THRESH_BINARY_INV)
+    skel = skeletonize(bw // 255).astype(np.uint8) * 255
+    contours, _ = cv2.findContours(skel, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    paths = []
+    for cnt in contours:
+        eps = APPROX_FACTOR * cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, eps, True).squeeze()
+        if approx.ndim == 1:
+            approx = np.array([approx])
+        if len(approx) <= 1:
+            continue
+        if len(approx) <= 10 and np.linalg.norm(approx[0] - approx[-1]) < SHORT_PATH_THRESHOLD:
+            continue
+        pts = approx.astype(float)
+        pts[:,1] = h_px - pts[:,1]
+        pts *= SCALE
+        paths.append(pts)
+    if not paths:
+        return [], (h_px, w_px)
+    ordered = [paths.pop(0)]
+    while paths:
+        last = ordered[-1][-1]
+        best_idx, best_d, rev = 0, float('inf'), False
+        for i, p in enumerate(paths):
+            d0 = np.linalg.norm(last - p[0])
+            d1 = np.linalg.norm(last - p[-1])
+            if d0 < best_d:
+                best_d, best_idx, rev = d0, i, False
+            if d1 < best_d:
+                best_d, best_idx, rev = d1, i, True
+        p = paths.pop(best_idx)
+        ordered.append(p[::-1] if rev else p)
+    return ordered, (h_px, w_px)
+
+# === Preview ===
+def preview_paths(paths, shape_px):
+    h_px, w_px = shape_px
+    plt.figure(figsize=(8,8))
+    plt.title("Path Preview")
+    plt.imshow(
+        np.zeros((h_px, w_px)),
+        cmap='gray',
+        extent=[0, w_px * SCALE, 0, h_px * SCALE]
+    )
+    for p in paths:
+        plt.plot(p[:,0], p[:,1], '-')
+    plt.axis('equal')
+    plt.show()
+
+# === G-code Generation ===
+def paths_to_gcode(paths):
+    lines = [
+        'G21' if UNITS=='mm' else 'G20',
+        'G90' if ABSOLUTE else 'G91',
+        'G92 X0 Y0',
+        PEN_UP_CMD
+    ]
+    for p in paths:
+        x0, y0 = p[0]
+        lines.append(f"G0 X{x0:.3f} Y{y0:.3f} F{TRAVEL_FEED}")
+        lines.append(PEN_DOWN_CMD)
+        px, py = x0, y0
+        for x, y in p[::SKIP_POINTS]:
+            if math.hypot(x - px, y - py) < MIN_MOVE:
+                continue
+            lines.append(f"G1 X{x:.3f} Y{y:.3f} F{DRAW_FEED}")
+            px, py = x, y
+        lines.append(PEN_UP_CMD)
+    lines.append('M2')
+    return '\n'.join(lines)
+
+# === Time Estimation ===
+def estimate_plot_time(paths):
+    total = 0.0
+    for p in paths:
+        total += math.hypot(*p[0]) / TRAVEL_FEED * 60
+        for (x0, y0), (x1, y1) in zip(p, p[1:]):
+            total += math.hypot(x1 - x0, y1 - y0) / DRAW_FEED * 60
+    return total / 60
+
+# === Serial Streaming ===
+def send_gcode(port, baud, gcode):
+    with serial.Serial(port, baud, timeout=1) as ser:
+        time.sleep(2)
+        ser.flushInput()
+        for line in gcode.splitlines():
+            if not line:
+                continue
+            ser.write((line + '\n').encode())
+            while not ser.readline().strip().lower().startswith(b'ok'):
+                pass
+            if line == PEN_DOWN_CMD or line == PEN_UP_CMD:
+                time.sleep(0.2)
+# === Text-to-Image ===
+def text_to_image(prompt):
+    system_msg = (
+        "You are a prompt engineer generating very simple black-and-white line drawing (Only thin black outlines on a plain white background, no shading, no filled-in areas, no textures—just minimal, continuous black lines) prompts for DALL·E."
+    )
+    chat = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    dalle_prompt = chat.choices[0].message.content.strip()
+    img_resp = openai.images.generate(
+        model="dall-e-3",
+        prompt=dalle_prompt,
+        size="1024x1024",
+        n=1
+    )
+    url = img_resp.data[0].url
+    r = requests.get(url)
+    img = Image.open(BytesIO(r.content)).convert('L')
+    bw = img.point(lambda x: 255 if x < 128 else 0, mode='1')
+    inv_bw = bw.point(lambda x: 255 - x, mode='1')
+    path = "generated_line.png"
+
+    inv_bw.save(path)
+    print(f"Image saved: {path}")
+
+    
+    # ← ADD THIS PREVIEW BLOCK ↓
+    plt.figure(figsize=(6,6))
+    plt.imshow(inv_bw, cmap='gray')
+    plt.title('AI-Generated Line Sketch')
+    plt.axis('off')
+    plt.show()
+    # ← END PREVIEW
+
+    return path
+
+# === Mode Routines ===
+def run_image_mode(image_path=IMAGE_PATH):
+    paths, shape = image_to_vector_coordinates(image_path)
+    if PREVIEW and paths:
+        preview_paths(paths, shape)
+    gcode = paths_to_gcode(paths)
+    print(f"Estimated time: {estimate_plot_time(paths):.1f} min")
+    with open(OUTPUT_FILE, 'w') as f:
+        f.write(gcode)
+    print(f"Saved G-code to {OUTPUT_FILE}")
+    if SERIAL_PORT:
+        print(f"Streaming to {SERIAL_PORT}@{BAUDRATE}...")
+        send_gcode(SERIAL_PORT, BAUDRATE, gcode)
+        print("Done.")
+
+
+def run_draw_mode():
+    ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=1)
+    time.sleep(2)
+    ser.flushInput()
+    for cmd in [
+        'G21' if UNITS=='mm' else 'G20',
+        'G90' if ABSOLUTE else 'G91',
+        'G92 X0 Y0',
+        PEN_UP_CMD
+    ]:
+        ser.write((cmd + '\n').encode())
+        while not ser.readline().strip().lower().startswith(b'ok'):
+            pass
+    pen = False
+    last_mx = (SCREEN_WIDTH_PX / 2) * (DRAW_AREA_WIDTH_MM / SCREEN_WIDTH_PX)
+    last_my = (SCREEN_HEIGHT_PX / 2) * (DRAW_AREA_HEIGHT_MM / SCREEN_HEIGHT_PX)
+    scale_x = DRAW_AREA_WIDTH_MM / SCREEN_WIDTH_PX
+    scale_y = DRAW_AREA_HEIGHT_MM / SCREEN_HEIGHT_PX
+
+    def send(cmd):
+        ser.write((cmd + '\n').encode())
+        while not ser.readline().strip().lower().startswith(b'ok'):
+            pass
+
+    screen = Screen()
+    screen.setup(SCREEN_WIDTH_PX, SCREEN_HEIGHT_PX)
+    drawer = Turtle('turtle')
+    drawer.speed('fastest')
+
+    def toggle(x, y):
+        nonlocal pen
+        if not pen:
+            send(PEN_DOWN_CMD)
+            pen = True
+        else:
+            send(PEN_UP_CMD)
+            pen = False
+
+    def drag(x, y):
+        nonlocal pen, last_mx, last_my
+        drawer.ondrag(None)
+        drawer.goto(x, y)
+        drawer.ondrag(drag)
+        mx = (x + SCREEN_WIDTH_PX / 2) * scale_x
+        my = (y + SCREEN_HEIGHT_PX / 2) * scale_y
+        dist = math.hypot(mx - last_mx, my - last_my)
+        steps = max(1, int(dist / SMOOTH_SEGMENT_MM))
+        for i in range(1, steps+1):
+            ix = last_mx + (mx - last_mx) * i / steps
+            iy = last_my + (my - last_my) * i / steps
+            send(f"G{'1' if pen else '0'} X{ix:.3f} Y{iy:.3f} F{DRAW_FEED if pen else TRAVEL_FEED}")
+        last_mx, last_my = mx, my
+
+    screen.onclick(toggle, btn=3)
+    drawer.ondrag(drag)
+    screen.mainloop()
+    ser.close()
+
+
+def run_text2img_mode():
+    prompt = input("Enter text prompt: ")
+    img_path = text_to_image(prompt)
+    run_image_mode(image_path=img_path)
+
+# === Main ===
+def main():
+    print("Select mode: 1) Image plot  2) Freehand draw  3) Text-to-image plot")
+    c = input("Choice: ").strip()
+    if c == '1':
+        run_image_mode()
+    elif c == '2':
+        run_draw_mode()
+    elif c == '3':
+        run_text2img_mode()
+    else:
+        print("Invalid choice.")
+
+if __name__ == '__main__':
+    main()
           </code></pre>
           <div class="fade"></div>
           <div class="toolbar">
@@ -570,42 +887,41 @@
 
               <!-- Video now spans full width below both columns -->
               <div class="modes-video fadebox" id="modeVideoBox">
-                <video id="modeVideo" controls preload="metadata" width="100%" height="auto"
-                      poster="https://picsum.photos/800/450">
+                <video id="modeVideo" controls preload="metadata" width="100%" height="auto">
                   <source id="modeVideoSrc" src="" type="video/mp4">
                   Your browser does not support the video tag.
                 </video>
+                <img id="modeImage" src="" alt="" style="display:none;width:100%;height:auto;" />
+
               </div>
 
           </section>
 
 
-        <h2>Mechanics & Tuning</h2>
-        <p>Filler text: I tuned belt tension by printing a quick gauge and checked orthogonality with a square test pattern. Backlash compensation wasn’t necessary after reinforcing the pen mount. I’ll add real measurements and failure photos here.</p>
+        <h2>Interface</h2>
+        <p>I built a custom GUI using tKinter to upload, resize and position drawings. The different modes can be switched in the GUI or via AI interpreted voice commands</p>
 
         <div class="figure">
-          <img alt="Placeholder: close-up of carriage" loading="lazy" decoding="async" src="https://picsum.photos/1200/720?2" />
+          <img alt="Placeholder: close-up of carriage" loading="lazy" decoding="async" src="../assets/images/gui.jpg" />
           <div class="figcap">Figure 3 — Carriage detail (placeholder).</div>
         </div>
-
-        <h2>Problems & Solutions</h2>
-        <ul>
-          <li><strong>Missed steps on fast diagonals:</strong> reduced jerk, increased current within thermal limits, and lengthened accel ramp.</li>
-          <li><strong>Wobbly pen lines:</strong> stiffened mount and added a felt damper; swapped to a finer tip marker.</li>
-          <li><strong>Cable drag:</strong> re‑routed through a lightweight loop with slack management.</li>
-        </ul>
-
-        <div class="callout"><strong>Note:</strong> I’ll replace these with real issues from testing once you confirm the page layout.</div>
-
         <h2>Results</h2>
-        <p>Filler text: The plotter can draw legible 15mm‑tall text and smooth curves across a 600×400mm area. Typical jobs complete without overheating. I’ll add timing numbers and a short embedded clip later.</p>
+        <p>The custom-built pen plotter successfully meets and extends its original goal of producing accurate, high-quality line drawings comparable to those from a commercial plotter. Integrated directly into the whiteboard—without the need for any external framework or bulky infrastructure—it can be mounted securely on a wall and operated with minimal noise. Its open, fully customisable control software allows new modes and features to be added without the limitations of conventional tools such as GRBL or Universal G-code Sender. Advanced capabilities include AI-based image processing to convert any picture into a line drawing for plotting, real-time hand-tracking so sketches made on a computer are reproduced instantly on the whiteboard, and voice-activated commands that can both generate AI-created images and instruct the plotter to draw them. These results demonstrate a versatile, low-noise system that goes well beyond the functionality of a typical pen plotter.</p>
 
-        <h2>Next Steps</h2>
-        <ul>
-          <li>Speed/accel envelope exploration and jerk‑limited motion.</li>
-          <li>Vector text with custom fonts and kerning controls.</li>
-          <li>Cable tidy and a magnetic pen quick‑release.</li>
-        </ul>
+        <!-- Photo Collage -->
+        <section id="photo-collage" class="collage-section">
+          <h2>Photo Collage</h2>
+          <div class="collage" id="collage">
+            <!-- Add/remove images freely; each will slot in automatically -->
+            <img src="../assets/images/IMG_4492.JPG" alt="Plotter drawing 1" loading="lazy" decoding="async">
+            <img src="../assets/images/IMG_4493.JPG" alt="Motor detail" loading="lazy" decoding="async">
+            <img src="../assets/images/IMG_4495.PNG" alt="Pulleys & cable" loading="lazy" decoding="async">
+            <img src="../assets/images/IMG_4494.JPG" alt="Electronics" loading="lazy" decoding="async">
+            <img src="../assets/images/IMG_4496.JPG" alt="Electronics" loading="lazy" decoding="async">
+            <!-- Add more <img> lines; no fixed count needed -->
+          </div>
+        </section>
+
       </article>
 
       <!-- Sidebar / meta -->
@@ -613,7 +929,7 @@
         <h3>Project</h3>
         <div class="kv">
           <div><span>Status</span><strong>In progress</strong></div>
-          <div><span>Started</span><strong>2025‑08</strong></div>
+          <div><span>Started</span><strong>2025‑03</strong></div>
           <div><span>Area</span><strong>Mechatronics</strong></div>
         </div>
         <h3 style="margin-top:14px">Tech</h3>
@@ -628,7 +944,7 @@
       </aside>
     </div>
 
-    <footer>© <span id="year"></span> Abitha • Bristol, UK</footer>
+    <footer>© <span id="year"></span> Eldho <B></B>iju • Bristol, UK</footer>
   </div>
 
   <script>
@@ -767,46 +1083,119 @@
   <script>
     // --- Modes/Features carousel data ---
       const MODES = [
+                {
+          name: "Hand-Tracking",
+          lang: "cpp",
+          code: `import cv2, time, serial, mediapipe as mp, math
+
+ser = serial.Serial("COM5", 115200, timeout=1); time.sleep(2)
+for cmd in ["G21","G90","G92 X0 Y0","M5"]:   # init + pen up
+    ser.write((cmd+"\n").encode()); ser.readline()
+
+hands = mp.solutions.hands.Hands(max_num_hands=1)
+cap = cv2.VideoCapture(0); pen = False
+
+def send(cmd): ser.write((cmd+"\n").encode()); ser.readline()
+
+while True:
+    ok, frame = cap.read();  if not ok: break
+    res = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    if res.multi_hand_landmarks:
+        lm = res.multi_hand_landmarks[0].landmark
+        ix, iy = lm[8].x, lm[8].y                # index fingertip
+        tx, ty = lm[4].x, lm[4].y                # thumb tip
+        if math.hypot(ix-tx, iy-ty) < 0.06:      # pinch -> toggle pen
+            pen = not pen; send("M3" if pen else "M5")
+        x, y = ix*400, iy*300                    # map to mm
+        send(f"G{'1' if pen else '0'} X{x:.1f} Y{y:.1f} F2000")
+    if cv2.waitKey(1) & 0xFF == ord('q'): break
+`,
+          desc: "Track the users hand using a webcam mounted to the side of the board, the coordinates are mapped to the whiteboard and sent in real time. I added gesture tracking for pen up and pen down aswell. Powered by Google's MediaPipe Library",
+          video: "../assets/videos/0924 (3).mp4" // <- replace with your file or keep blank
+        },
         {
           name: "Vector Plot (G-code)",
           lang: "cpp",
-          code: `// Streams G-code from host -> GRBL
-    void loop() {
-      if (Serial.available()) {
-        char c = Serial.read();
-        grbl_process(c); // pass to GRBL parser
-      }
-    }`,
-          desc: "Standard G-code streaming: paths are generated offline (Inkscape/VPython/etc.) and sent over serial to GRBL. Good for precise drawings.",
+          code: `import serial, time
+
+def send_gcode(port: str, baud: int, gcode_lines: list[str]):
+    """
+    Open the GRBL serial port and stream a list of G-code commands.
+    """
+    with serial.Serial(port, baud, timeout=1) as ser:
+        time.sleep(2)                          # allow GRBL to reset
+        ser.write(b"\r\n\r\n"); time.sleep(2)   # wake & flush
+        ser.flushInput()
+
+        for line in gcode_lines:
+            cmd = line.strip() + '\n'
+            ser.write(cmd.encode())
+            grbl_out = ser.readline().decode().strip()
+            print(f">> {cmd.strip()}   [{grbl_out}]")
+
+# Example usage:
+# send_gcode("/dev/ttyUSB0", 115200, ["G21", "G90", "G0 X10 Y10", "M3"])
+`,
+          desc: "Standard G-code streaming: paths are generated offline  and sent over serial to GRBL. Good for precise drawings.",
           video: "../assets/videos/0911(1).mp4" // <- replace with your file or keep blank
         },
         {
           name: "Live Sketch",
           lang: "cpp",
-          code: `// Joystick -> pen plot (live control)
-    void loop() {
-      int dx = analogRead(A0) - 512;
-      int dy = analogRead(A1) - 512;
-      planner_line(dx, dy, feedRateLive);
-    }`,
-          desc: "Real-time control via joystick/wacom/keyboard. Great for testing mechanics and for playful demos.",
-          video: "assets/videos/mode-live.mp4"
+          code: `def image_to_vector_coordinates(path):
+    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    _, bw = cv2.threshold(img, THRESHOLD_VALUE, 255, cv2.THRESH_BINARY_INV)
+    skel = skeletonize(bw // 255).astype(np.uint8) * 255
+    contours, _ = cv2.findContours(skel, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+    paths = []
+    for cnt in contours:
+        eps = APPROX_FACTOR * cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, eps, True).squeeze()
+        if approx.ndim == 1 or len(approx) <= 1: continue
+        pts = approx.astype(float)
+        pts[:,1] = img.shape[0] - pts[:,1]      # flip Y
+        pts *= SCALE
+        paths.append(pts)
+    return paths, img.shape
+
+def run_image_mode(image_path):
+    paths, shape = image_to_vector_coordinates(image_path)
+    if PREVIEW and paths: preview_paths(paths, shape)
+    gcode = paths_to_gcode(paths)
+    if SERIAL_PORT: send_gcode(SERIAL_PORT, BAUDRATE, gcode)
+`,
+          desc: "Real-time control. Great for testing mechanics and for.",
+          video: "../assets/videos/0924.mp4"
         },
         {
-          name: "Raster Dither",
+          name: "image to plot",
           lang: "cpp",
-          code: `// Image -> dither -> scanlines
-    for (int y=0; y<H; y++) {
-      for (int x=0; x<W; x++) {
-        bool dot = dither(img[x][y]);
-        pen(dot ? DOWN : UP);
-        stepX();
-      }
-      serpentine ? reverseX() : homeX();
-      stepY();
-    }`,
-          desc: "Converts images to a dithered pattern and scans in serpentine lines. Produces shaded ‘print-like’ whiteboard art.",
-          video: "assets/videos/mode-raster.mp4"
+          code: `def image_to_vector_coordinates(path):
+    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    _, bw = cv2.threshold(img, THRESHOLD_VALUE, 255, cv2.THRESH_BINARY_INV)
+    skel = skeletonize(bw // 255).astype(np.uint8) * 255
+    contours, _ = cv2.findContours(skel, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+    paths = []
+    for cnt in contours:
+        eps = APPROX_FACTOR * cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, eps, True).squeeze()
+        if approx.ndim == 1 or len(approx) <= 1: continue
+        pts = approx.astype(float)
+        pts[:,1] = img.shape[0] - pts[:,1]      # flip Y
+        pts *= SCALE
+        paths.append(pts)
+    return paths, img.shape
+
+def run_image_mode(image_path):
+    paths, shape = image_to_vector_coordinates(image_path)
+    if PREVIEW and paths: preview_paths(paths, shape)
+    gcode = paths_to_gcode(paths)
+    if SERIAL_PORT: send_gcode(SERIAL_PORT, BAUDRATE, gcode)
+`,
+          desc: "Converts images to a line drawing using a ChatGpt API then convereted to G-code. Other than the API, everything is done in the whiteboard code itself, no outside programs used.",
+          image: "../assets/images/Untitled design.jpg"
         }
       ];
 
@@ -861,14 +1250,31 @@
           descBox.innerHTML = `<p>${m.desc}</p>`;
 
           // Video
+          const imgEl = document.getElementById('modeImage');
+
           if (m.video) {
+            // show video, hide image
+            videoBox.style.display = '';
+            videoEl.style.display = '';
+            imgEl.style.display = 'none';
+
             videoSrc.src = m.video;
             videoEl.load();
-          } else {
+
+          } else if (m.image) {
+            // show image, hide video
+            videoEl.pause();
+            videoEl.style.display = 'none';
             videoSrc.src = '';
-            videoEl.removeAttribute('src');
-            videoEl.load();
+            imgEl.src = m.image;
+            imgEl.style.display = 'block';
+
+          } else {
+            // nothing to show
+            videoEl.style.display = 'none';
+            imgEl.style.display = 'none';
           }
+
 
           // Fade back in
           setChanging(false);
@@ -920,6 +1326,19 @@
       })();
     </script>
 
+    <script>
+      (function(){
+        const grid = document.getElementById('collage');
+        if (!grid) return;
+        const imgs = Array.from(grid.querySelectorAll('img'));
+        imgs.forEach((img) => {
+          const r = Math.random();
+          if (r < 0.25) img.classList.add('tiltL');
+          else if (r < 0.50) img.classList.add('tiltR');
+          // else: keep straight for variety
+        });
+      })();
+    </script>
 
 </body>
 </html>
