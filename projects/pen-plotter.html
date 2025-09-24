@@ -380,46 +380,35 @@
         grid-template-columns: 1fr 1fr;  /* side by side on wider screens */
       }
     }
-
-
-    @media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important} }
-
-    /* --- FIX: mobile hero image/video width issue --- */
-
-    /* Safety net: prevent any horizontal overflow */
+    /* --- MOBILE FULL-BLEED HERO (prevents narrow hero, no zooming needed) --- */
     @media (max-width: 640px) {
-      html, body { overflow-x: hidden; }
-    }
+      /* Make the hero span the full viewport width, independent of the .shell max-width */
+      .hero {
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+      }
 
-    .hero-media { width: 100%; }
-
-    /* Mobile: make hero media full-width and stop overlay layout issues */
-    @media (max-width: 640px) {
+      /* Keep media fluid and tall enough, no forced aspect */
       .hero-media {
-        aspect-ratio: auto;      /* let height be driven by content */
+        position: relative;
       }
       .hero-media img,
       .hero-media video {
-        position: static;        /* stop absolute positioning on mobile */
         display: block;
         width: 100%;
-        height: auto;            /* keep correct proportions */
-        object-fit: cover;
+        height: auto;      /* preserves intrinsic aspect (portrait stays portrait) */
+        object-fit: cover; /* safe: fills width; change to 'contain' if you dislike cropping */
       }
-      .hero-media video {
-        display: none;           /* no hover on touch; show the image only */
-      }
-    }
 
-    /* Desktop/laptops: keep the hover fade effect */
-    @media (hover: hover) and (pointer: fine) {
-      .hero-media { aspect-ratio: 16/7; position: relative; }
-      .hero-media img,
-      .hero-media video { width: 100%; height: 100%; object-fit: cover; }
-      .hero-media video { position: absolute; inset: 0; opacity: 0; transition: opacity .4s ease; }
-      .hero-media:hover video { opacity: 1; }
+      /* Optional: if you prefer not to show video on touch, uncomment:
+      .hero-media video { display: none; }
+      */
+      
+      /* Prevent any horizontal jiggle from full-bleed margins (doesn't affect pinch-zoom) */
+      body { overflow-x: hidden; }
     }
-    /* --- END FIX --- */
+    /* --- END MOBILE FULL-BLEED HERO --- */
 
 
       /* --- Photo Collage --- */
@@ -486,7 +475,7 @@
 
         <div class="figure">
           <img alt="Placeholder: plotter drawing on a whiteboard" loading="lazy" decoding="async" src="../assets/images/IMG_4142.jpg" />
-          <div class="figcap">Figure 1 — Demo still (placeholder). Replace with an action shot of the pen plotting a shape.</div>
+          <div class="figcap">Figure 1 — Image of project. Replace with an action shot of the pen plotting a shape.</div>
         </div>
 
         <h2>Goals</h2>
@@ -500,7 +489,7 @@
         <p>The whiteboard plotter is built around a CoreXY motion system, chosen for its light moving mass and high-speed accuracy. Motion is driven by two NEMA-17 stepper motors through GT2 belts and pulleys, with a compact micro-servo to lift and lower the pen. An Arduino Uno fitted with a CNC Shield and TMC stepper drivers provides the control electronics. On the firmware side, I run a custom GRBL streaming setup: instead of sending pre-generated files only, a lightweight host script streams G-code commands in real time, allowing both traditional plotted drawings and interactive modes. Together these mechanical, electronic, and software components form a precise, easily serviceable platform for large-scale whiteboard sketches.</p>
         <div class="figure">
           <img alt="Placeholder architecture diagram" loading="lazy" decoding="async" src="../assets/images/corexy.png" />
-          <div class="figcap">Figure 2 — System blocks (placeholder).</div>
+          <div class="figcap">Figure 2 — CoreXY architecture.</div>
         </div>
 
         <h2>Hardware</h2>
@@ -903,7 +892,7 @@ if __name__ == '__main__':
 
         <div class="figure">
           <img alt="Placeholder: close-up of carriage" loading="lazy" decoding="async" src="../assets/images/gui.jpg" />
-          <div class="figcap">Figure 3 — Carriage detail (placeholder).</div>
+          <div class="figcap">Figure 3 — GUI.</div>
         </div>
         <h2>Results</h2>
         <p>The custom-built pen plotter successfully meets and extends its original goal of producing accurate, high-quality line drawings comparable to those from a commercial plotter. Integrated directly into the whiteboard—without the need for any external framework or bulky infrastructure—it can be mounted securely on a wall and operated with minimal noise. Its open, fully customisable control software allows new modes and features to be added without the limitations of conventional tools such as GRBL or Universal G-code Sender. Advanced capabilities include AI-based image processing to convert any picture into a line drawing for plotting, real-time hand-tracking so sketches made on a computer are reproduced instantly on the whiteboard, and voice-activated commands that can both generate AI-created images and instruct the plotter to draw them. These results demonstrate a versatile, low-noise system that goes well beyond the functionality of a typical pen plotter.</p>
